@@ -45,7 +45,7 @@ public class Dashboard extends JFrame {
                     DatagramPacket receivePacket = null;
                     while (receivePacket == null) {
                         receivePacket = client.DiscoverBulbs();
-                        Thread.sleep(5000);// wait 5 sec
+                        Thread.sleep(50);// wait 5 sec
                     }
                     device = client.PrepareDeviceByReceivedPacket(receivePacket);
                     System.out.println("Device Added");
