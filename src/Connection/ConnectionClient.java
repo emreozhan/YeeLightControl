@@ -1,11 +1,12 @@
 package Connection;
 
+import Constant.DiscoverResponseType;
 import Device.BulbDevice;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,10 @@ public class ConnectionClient {
     private int port;
     private InetAddress multicastAddress;
     private int timeOut;
+
+    private Socket clientSocket;
+    private DataOutputStream outToServer;
+    private BufferedReader inFromServer;
 
     public ConnectionClient(byte[] sendData, InetAddress multicastAddress, int port, int timeout) {
         this.sendData = sendData;
@@ -52,7 +57,7 @@ public class ConnectionClient {
     }
 
     public BulbDevice PrepareDeviceByReceivedPacket(DatagramPacket receivePacket) {
-        BulbDevice devi = new BulbDevice();
+        BulbDevice device = new BulbDevice();
 
         Scanner sc = new Scanner(new String(receivePacket.getData()));
 
@@ -67,8 +72,44 @@ public class ConnectionClient {
             if (dummyLine.contains(":"))
                 responseData.put(dummies[0], dummies[1]);
         }
-
-        return devi;
+        device.setIp(receivePacket.getAddress().toString().substring(1));
+        String location =responseData.get(DiscoverResponseType.LOCATION);
+        device.setPort(Integer.parseInt(location.substring(location.lastIndexOf(":")+1)));
+        device.setName(responseData.get(DiscoverResponseType.NAME));
+        device.setId(responseData.get(DiscoverResponseType.ID));
+        return device;
     }
 
+    public boolean setTcpSetting(String ip, int port) {
+        try {
+            try {
+                if (!clientSocket.isClosed()) {
+                    clientSocket.close();
+                }
+            } catch (NullPointerException e) {
+                System.out.println(e.getMessage());
+            }
+            clientSocket = new Socket(ip, port);
+            outToServer = new DataOutputStream(clientSocket.getOutputStream());
+            inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void toogleBulb(String command){
+        String data = "NONE";
+        try {
+            outToServer.writeBytes("{\"id\":0,\"method\":" + command + "}" + "\r\n");
+            data = inFromServer.readLine();
+            System.out.println(data);
+            //clientSocket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       // return data;
+
+    }
 }
