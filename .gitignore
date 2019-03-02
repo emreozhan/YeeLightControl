@@ -1,1 +1,4 @@
 .idea/workspace.xml
+out/production/yeelight/Main.class
+out/production/yeelight/Connection/ConnectionClient.class
+out/production/yeelight/Device/BulbDevice.class
